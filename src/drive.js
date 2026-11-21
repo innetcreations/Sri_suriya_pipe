@@ -67,7 +67,13 @@ async function upload(buffer, name, mime) {
       body: JSON.stringify({ action: 'upload', key: c.key, name, mime, data: buffer.toString('base64') }) });
     if (!okFinalHost(res.url)) throw new Error('Unexpected redirect target.');
     const j = await res.json().catch(() => null);
-    if (!j || !j.ok) throw new Error((j && j.error) || `Drive upload failed (HTTP ${res.status}).`);
+    if (!j || !j.ok) {
+      let err = (j && j.error) || `Drive upload failed (HTTP ${res.status}).`;
+      if (/Access denied: DriveApp/i.test(err)) {
+        err = 'Drive authorization needed: open script.google.com, run authorizeScript(), and redeploy (Manage deployments -> Edit -> New version).';
+      }
+      throw new Error(err);
+    }
     if (!new RegExp(`^${ID}$`).test(String(j.id || ''))) throw new Error('Drive returned an unexpected file id.');
     return { id: j.id, name: String(j.name || name).slice(0, 120) };
   } catch (e) { throw new Error(e.name === 'AbortError' ? 'Google Drive did not answer in time.' : e.message); } finally { clearTimeout(t); }
