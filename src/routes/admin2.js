@@ -23,14 +23,14 @@ module.exports = function mount(router, { A, page, wrap, needs, intId, FLASH }) 
   // ═════════════════════════════════════════ Settings
   const groupOf = (k) => GROUPS.find((g) => g[0] === k);
   const asField = (d, S) => {
-    const base = { k: d.key, label: d.label, help: d.help, max: 300 };
+    const base = { k: d.key, label: d.label, help: d.help };
     switch (d.type) {
       case 'bool': return [{ ...base, t: 'bool', checkLabel: 'On' }, S[d.key]];
       case 'select': return [{ ...base, t: 'select', options: d.options, def: d.def }, S[d.key]];
       case 'textarea': return [{ ...base, t: d.code ? 'json' : 'textarea', rows: d.code ? 8 : 4, max: d.code ? 20000 : 4000 }, S[d.key]];
-      case 'number': return [{ ...base, t: 'number' }, S[d.key]];
+      case 'number': return [{ ...base, t: 'number', min: d.min, max: d.max }, S[d.key]];
       case 'url': case 'email': case 'image': return [{ ...base, t: d.type }, S[d.key]];
-      default: return [{ ...base, t: 'text', max: d.type === 'tel' ? 40 : 300 }, S[d.key]];
+      default: return [{ ...base, t: 'text', max: d.type === 'tel' ? 40 : (d.max || 300) }, S[d.key]];
     }
   };
   const secretField = (d, has) => html`<div class="a-field"><label for="f_${d.key}">${d.label}</label><input type="password" id="f_${d.key}" name="${d.key}" value="" autocomplete="new-password" placeholder="${has ? '•••••••• (saved – leave empty to keep)' : 'not set'}" maxlength="500">${d.help ? html`<small class="a-help">${d.help}</small>` : ''}<small class="a-help">Stored encrypted. Never shown again after saving.</small></div>`;
