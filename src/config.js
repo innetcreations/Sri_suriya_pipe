@@ -26,9 +26,9 @@ const isProd = env.NODE_ENV === 'production';
 const IS_VERCEL = !!env.VERCEL;            // running as a Vercel serverless function (read-only disk, no background processes)
 const PORT = parseInt(env.PORT, 10) || 3000;
 // On Vercel the only writable place is /tmp (wiped between requests/instances), so the project folders are never used for data there.
-const DATA_DIR = path.resolve(ROOT, env.DATA_DIR || (IS_VERCEL ? '/tmp/ssp-data' : 'data'));
+const DATA_DIR = IS_VERCEL ? '/tmp/ssp-data' : path.resolve(ROOT, env.DATA_DIR || 'data');
 // Uploaded images/videos live in the project's assets folder (public/assets/uploads) so they can be committed and deployed with the site.
-const UPLOAD_DIR = path.resolve(ROOT, env.UPLOAD_DIR || (IS_VERCEL ? '/tmp/ssp-uploads' : 'public/assets/uploads'));
+const UPLOAD_DIR = IS_VERCEL ? '/tmp/ssp-uploads' : path.resolve(ROOT, env.UPLOAD_DIR || 'public/assets/uploads');
 const mk = (d) => { try { fs.mkdirSync(d, { recursive: true }); fs.accessSync(d, fs.constants.W_OK); return true; } catch { return false; } };
 mk(DATA_DIR);
 // false on read-only hosts: the admin then offers Google Drive upload / paste-a-link instead of local upload.
