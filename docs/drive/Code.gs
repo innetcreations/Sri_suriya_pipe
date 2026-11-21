@@ -29,6 +29,18 @@ function doGet() {
   return json_({ ok: true, service: 'sri-suriya-drive', note: 'POST only' });
 }
 
+// Run this function ONCE in the Apps Script editor (press "Run" button) to grant Drive permissions.
+function authorizeScript() {
+  var props = PropertiesService.getScriptProperties();
+  var folderId = props.getProperty('FOLDER_ID');
+  if (!folderId) {
+    Logger.log('Please set FOLDER_ID in Script properties first.');
+    return;
+  }
+  var folder = DriveApp.getFolderById(folderId);
+  Logger.log('SUCCESS! DriveApp is authorized. Folder name: ' + folder.getName());
+}
+
 function sameKey_(a, b) {            // constant-time comparison
   a = String(a || ''); b = String(b || '');
   if (a.length !== b.length || a.length === 0) return false;
