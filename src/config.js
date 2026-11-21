@@ -64,9 +64,14 @@ if (!SECRET) {
 if (SECRET.length < 32) throw new Error('APP_SECRET must be at least 32 characters');
 
 // On Vercel the production address is provided automatically; set SITE_URL yourself once you add a custom domain.
-const vercelHost = IS_VERCEL ? (env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL || '') : '';
-const SITE_URL = (env.SITE_URL || (vercelHost ? `https://${vercelHost}` : '') || `http://localhost:${PORT}`).replace(/\/+$/, '');
-let trust = (env.TRUST_PROXY !== undefined && env.TRUST_PROXY.trim() !== '') ? env.TRUST_PROXY.trim() : isProd ? '1' : '0';
+const vercelHost = IS_VERCEL ? (env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL || 'srisuriyapipe.vercel.app') : '';
+const rawSiteUrl = env.SITE_URL || '';
+const SITE_URL = (IS_VERCEL
+  ? (rawSiteUrl && !rawSiteUrl.includes('localhost') ? rawSiteUrl : `https://${vercelHost}`)
+  : (rawSiteUrl || `http://localhost:${PORT}`)
+).replace(/\/+$/, '');
+const HTTPS = SITE_URL.startsWith('https://') || IS_VERCEL;
+let trust = (env.TRUST_PROXY !== undefined && env.TRUST_PROXY.trim() !== '') ? env.TRUST_PROXY.trim() : (isProd || IS_VERCEL) ? '1' : '0';
 if (/^\d+$/.test(trust)) trust = parseInt(trust, 10) || false;
 else if (trust === 'false') trust = false;
 else if (trust === 'true') trust = 1;
@@ -75,7 +80,7 @@ module.exports = {
   ROOT, DATA_DIR, UPLOAD_DIR, UPLOADS_WRITABLE, IS_VERCEL, PUBLIC_DIR: path.join(ROOT, 'public'),
   isProd, PORT, HOST: env.HOST || '0.0.0.0',
   SITE_URL,
-  HTTPS: SITE_URL.startsWith('https://'),
+  HTTPS,
   ADMIN_PATH: '/' + (env.ADMIN_PATH || 'admin').replace(/^\/+|\/+$/g, ''),
   SECRET,
   TRUST_PROXY: trust,

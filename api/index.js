@@ -27,9 +27,15 @@ module.exports = async (req, res) => {
     if (!app) await boot();
 
     // Vercel rewrites: if req.url matches internal handler path, restore original URL for Express routing
-    if (req.url === '/api' || req.url === '/api/' || req.url === '/api/index' || req.url === '/api/index.js') {
+    const cleanPath = req.url.split('?')[0].replace(/\/+$/, '');
+    if (cleanPath === '/api' || cleanPath === '/api/index' || cleanPath === '/api/index.js') {
       const orig = req.headers['x-forwarded-uri'] || req.headers['x-matched-path'] || '/';
-      req.url = (!orig || orig === '/api' || orig === '/api/' || orig === '/api/index' || orig === '/api/index.js') ? '/' : orig;
+      const cleanOrig = orig.split('?')[0].replace(/\/+$/, '');
+      if (!cleanOrig || cleanOrig === '/api' || cleanOrig === '/api/index' || cleanOrig === '/api/index.js') {
+        req.url = '/';
+      } else {
+        req.url = orig;
+      }
     }
 
     return new Promise((resolve, reject) => {

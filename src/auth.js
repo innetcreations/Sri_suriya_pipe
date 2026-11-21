@@ -68,20 +68,21 @@ function cookieOpts(maxAgeMs) {
 function startSession(res, user, req, stage = 'ok') {
   const token = rand(32); const now = Date.now();
   const life = stage === '2fa' ? 5 * 60000 : hours() * 3600000;
-  const csrf = rand(24);
+  const csrf = hmac('csrf:' + token);
   insSess.run(sha(token), user.id, stage, csrf, now, now, now + life, req.ip, clean(req.get('user-agent') || '', 200));
   res.cookie(COOKIE, token, cookieOpts(life));
   return { token, csrf };
 }
 function endSession(req, res) {
-  const t = req.cookies && req.cookies[COOKIE];
+  const t = req.cookies && (req.cookies[COOKIE] || req.cookies['__Host-ssp_s'] || req.cookies['ssp_s']);
   if (t) db.prepare('DELETE FROM sessions WHERE id=?').run(sha(t));
   res.clearCookie(COOKIE, { path: '/', httpOnly: true, sameSite: 'strict', secure: cfg.HTTPS });
+  if (COOKIE !== 'ssp_s') res.clearCookie('ssp_s', { path: '/', httpOnly: true, sameSite: 'strict', secure: false });
 }
 // Reads the session cookie. Sets req.user / req.sess (full session) or req.pending (password ok, awaiting 2FA).
 function loadSession(req, res, next) {
   try {
-    const t = req.cookies && req.cookies[COOKIE];
+    const t = req.cookies && (req.cookies[COOKIE] || req.cookies['__Host-ssp_s'] || req.cookies['ssp_s']);
     if (t && typeof t === 'string' && t.length < 100) {
       const s = selSess.get(sha(t)); const now = Date.now();
       if (s && s.expires_at > now && s.active && (s.stage !== 'ok' || s.last_seen + idleMs() > now)) {
@@ -110,8 +111,13 @@ const can = (user, min) => !!user && ROLES[user.role] >= ROLES[min];
 // CSRF: token bound to the server-side session. Required for every state-changing admin request.
 function verifyCsrf(req) {
   const tok = req.get('x-csrf-token') || (req.body && req.body._csrf) || '';
+  if (!tok) return false;
   const want = (req.sess && req.sess.csrf) || (req.pending && req.pending.csrf) || '';
-  return !!want && !!tok && safeEq(tok, want);
+  if (want && safeEq(tok, want)) return true;
+  // Stateless fallback bound cryptographically to the session token
+  const t = req.cookies && (req.cookies[COOKIE] || req.cookies['__Host-ssp_s'] || req.cookies['ssp_s']);
+  if (t && safeEq(tok, hmac('csrf:' + t))) return true;
+  return false;
 }
 // Login form protection (no session yet): double-submit cookie signed with the server secret.
 function issueLoginToken(res) {
@@ -120,7 +126,8 @@ function issueLoginToken(res) {
   return hmac('login:' + r);
 }
 function verifyLoginToken(req) {
-  const r = req.cookies && req.cookies[PRE_COOKIE]; const f = req.body && req.body._lt;
+  const r = req.cookies && (req.cookies[PRE_COOKIE] || req.cookies['__Host-ssp_lt'] || req.cookies['ssp_lt']);
+  const f = req.body && req.body._lt;
   return !!r && !!f && safeEq(hmac('login:' + r), f);
 }
 
