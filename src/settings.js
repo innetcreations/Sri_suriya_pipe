@@ -47,9 +47,9 @@ function validate(def, raw) {
 // Save a subset of settings. Returns {saved:[keys], errors:{key:msg}}.
 function save(values, keys) {
   const saved = []; const errors = {};
+  const targetDefs = keys ? SETTINGS.filter((d) => keys.includes(d.key)) : SETTINGS.filter((d) => d.key in values);
   const tx = db.transaction(() => {
-    for (const def of SETTINGS) {
-      if (keys && !keys.includes(def.key)) continue;
+    for (const def of targetDefs) {
       if (!(def.key in values)) {
         if (def.type === 'bool') values[def.key] = '0'; else continue; // unchecked checkbox
       }
