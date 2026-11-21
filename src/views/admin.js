@@ -25,8 +25,16 @@ function nav(req) {
   </nav>`;
 }
 
+const csrfOfReq = (req) => {
+  if (req && req.sess && req.sess.csrf) return req.sess.csrf;
+  if (req && req.pending && req.pending.csrf) return req.pending.csrf;
+  const t = req && req.cookies && (req.cookies[auth.COOKIE] || req.cookies['__Host-ssp_s'] || req.cookies['ssp_s']);
+  if (t) return auth.csrfOfToken(t);
+  return '';
+};
+
 function layout(req, { title, body, wide = false, actions = '' }) {
-  const csrf = req.sess.csrf;
+  const csrf = csrfOfReq(req);
   return html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow,noarchive">
 <title>${title} · Admin</title><link rel="icon" href="${settings.get('favicon') || '/images/favicon.svg'}"><link rel="stylesheet" href="/css/fonts.css"><link rel="stylesheet" href="/css/admin.css?v=${require('../cache').version()}"><meta name="csrf" content="${csrf}"></head>
 <body class="admin"><a class="skip" href="#main">Skip to content</a>
@@ -91,7 +99,7 @@ function modelForm(key, row, { errors = {}, values = null } = {}) {
   ${hasTa ? html`<div class="a-grid" data-panel="ta" hidden><p class="a-note wide">Optional Tamil translations. Anything left empty falls back to English on the Tamil version of the site.</p>${taFields.map((x) => field(x, taVal(x.k), { errors, name: 'ta__' + x.k, ta: true, ref: ['html', 'textarea'].includes(x.t) ? null : (get(x.k) && String(get(x.k)).slice(0, 90)) }))}</div>` : ''}`;
 }
 
-const csrfInput = (req) => html`<input type="hidden" name="_csrf" value="${req.sess.csrf}">`;
+const csrfInput = (req) => html`<input type="hidden" name="_csrf" value="${csrfOfReq(req)}">`;
 const pager = (base, page, total, per) => { const n = Math.ceil(total / per); if (n <= 1) return ''; const sep = base.includes('?') ? '&' : '?'; return html`<nav class="a-pager">${Array.from({ length: Math.min(n, 20) }, (_, i) => i + 1).map((p) => html`<a href="${base}${sep}page=${p}" class="${p === page ? 'on' : ''}">${p}</a>`)}</nav>`; };
 const badge = (t, c = '') => html`<span class="a-badge ${c}">${t}</span>`;
 

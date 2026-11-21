@@ -38,8 +38,8 @@ router.use((req, res, next) => {
   next();
 });
 router.use(auth.loadSession);
-router.use(express.urlencoded({ extended: false, limit: '400kb', parameterLimit: 1500 }));
-router.use(express.json({ limit: '2mb' }));
+router.use(express.urlencoded({ extended: true, limit: '10mb', parameterLimit: 5000 }));
+router.use(express.json({ limit: '10mb' }));
 router.use((req, res, next) => { // duplicate form keys (e.g. repeated checkboxes) -> last value
   if (req.body && typeof req.body === 'object') for (const k of Object.keys(req.body)) if (Array.isArray(req.body[k])) req.body[k] = req.body[k][req.body[k].length - 1];
   next();

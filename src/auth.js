@@ -110,15 +110,30 @@ const can = (user, min) => !!user && ROLES[user.role] >= ROLES[min];
 
 // CSRF: token bound to the server-side session. Required for every state-changing admin request.
 function verifyCsrf(req) {
-  const tok = req.get('x-csrf-token') || (req.body && req.body._csrf) || '';
+  const tok = req.get('x-csrf-token') || (req.body && req.body._csrf) || (req.query && req.query._csrf) || '';
   if (!tok) return false;
+  
+  // 1. Direct match with current session
   const want = (req.sess && req.sess.csrf) || (req.pending && req.pending.csrf) || '';
   if (want && safeEq(tok, want)) return true;
-  // Stateless fallback bound cryptographically to the session token
+
+  // 2. Stateless HMAC bound to the active session cookie
   const t = req.cookies && (req.cookies[COOKIE] || req.cookies['__Host-ssp_s'] || req.cookies['ssp_s']);
   if (t && safeEq(tok, hmac('csrf:' + t))) return true;
+
+  // 3. Match against any active session of this authenticated user (multi-tab / session rotation support)
+  if (req.user && req.user.id) {
+    try {
+      const rows = db.prepare('SELECT csrf FROM sessions WHERE user_id=? AND expires_at > ?').all(req.user.id, Date.now());
+      for (const r of rows) {
+        if (r.csrf && safeEq(tok, r.csrf)) return true;
+      }
+    } catch {}
+  }
+
   return false;
 }
+const csrfOfToken = (t) => (t ? hmac('csrf:' + t) : '');
 // Login form protection (no session yet): double-submit cookie signed with the server secret.
 function issueLoginToken(res) {
   const r = rand(18);
@@ -232,6 +247,6 @@ function ipAllowed(req) {
 }
 
 module.exports = {
-  COOKIE, ROLES, ROLE_LABEL, hashPassword, verifyPassword, checkPassword, startSession, endSession, loadSession, requireAuth, requireRole, can, verifyCsrf,
+  COOKIE, ROLES, ROLE_LABEL, hashPassword, verifyPassword, checkPassword, startSession, endSession, loadSession, requireAuth, requireRole, can, verifyCsrf, csrfOfToken,
   issueLoginToken, verifyLoginToken, attemptLogin, completeLogin, recordLogin, verifyTotp, newTotpSecret, totpQr, createUser, setPassword, ensureAdmin, pruneSessions, ipAllowed,
 };
