@@ -5,9 +5,17 @@
 let app = null;
 let booting = null;
 let bootError = null;
+let bootErrorAt = 0;
 
 function boot() {
-  if (bootError) throw bootError;
+  if (bootError) {
+    // Forget boot error after 10 seconds so transient network issues can recover automatically
+    if (Date.now() - bootErrorAt > 10000) {
+      bootError = null;
+    } else {
+      throw bootError;
+    }
+  }
   if (!booting) {
     booting = (async () => {
       const server = require('../server');
@@ -15,6 +23,7 @@ function boot() {
       app = server.buildApp();
     })().catch((e) => {
       bootError = e;
+      bootErrorAt = Date.now();
       booting = null;
       throw e;
     });
@@ -49,7 +58,6 @@ module.exports = async (req, res) => {
     res.statusCode = 503;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Retry-After', '5');
-    const msg = (e && (e.stack || e.message)) || String(e);
-    res.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Starting website...</title><meta http-equiv="refresh" content="5"></head><body style="font-family:system-ui,sans-serif;padding:2rem;max-width:800px;margin:auto;"><h1 style="color:#d32f2f;">The website is starting up</h1><p>Please wait a few seconds while services initialize. The page will refresh automatically.</p><details style="margin-top:2rem;border:1px solid #ccc;border-radius:6px;padding:1rem;"><summary style="cursor:pointer;font-weight:bold;">Diagnostics & Logs</summary><pre style="white-space:pre-wrap;background:#f8f9fa;padding:1rem;border-radius:4px;overflow:auto;margin-top:0.5rem;font-size:13px;">${msg}</pre></details></body></html>`);
+    res.end(`<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Starting website...</title><meta http-equiv="refresh" content="5"><style>body{font-family:system-ui,-apple-system,sans-serif;padding:3rem 1.5rem;max-width:600px;margin:auto;color:#1e293b;line-height:1.5;text-align:center}.box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:2.5rem 2rem;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05)}h1{color:#0b5ed7;font-size:1.5rem;margin-top:0}p{color:#64748b;margin:1rem 0 1.5rem}.spin{display:inline-block;width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:#0b5ed7;border-radius:50%;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}</style></head><body><div class="box"><div class="spin"></div><h1>Sri Suriya Polymers</h1><p>The website is connecting to its database and starting up.<br>This page will reload automatically in a few seconds.</p></div></body></html>`);
   }
 };
