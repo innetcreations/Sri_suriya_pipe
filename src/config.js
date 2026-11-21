@@ -23,12 +23,28 @@ const ROOT = path.resolve(__dirname, '..');
 
 const env = process.env;
 const isProd = env.NODE_ENV === 'production';
-const IS_VERCEL = !!env.VERCEL;            // running as a Vercel serverless function (read-only disk, no background processes)
+const IS_VERCEL = !!(env.VERCEL || env.VERCEL_ENV || env.NOW_REGION || env.AWS_LAMBDA_FUNCTION_NAME || env.LAMBDA_TASK_ROOT || env.VERCEL_URL);
 const PORT = parseInt(env.PORT, 10) || 3000;
+
+function ensureWritableDir(dir, fallback) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    return dir;
+  } catch {
+    try {
+      fs.mkdirSync(fallback, { recursive: true });
+      return fallback;
+    } catch {
+      return fallback;
+    }
+  }
+}
+
 // On Vercel the only writable place is /tmp (wiped between requests/instances), so the project folders are never used for data there.
-const DATA_DIR = IS_VERCEL ? '/tmp/ssp-data' : path.resolve(ROOT, env.DATA_DIR || 'data');
+const DATA_DIR = IS_VERCEL ? ensureWritableDir('/tmp/ssp-data', '/tmp/ssp-data') : ensureWritableDir(path.resolve(ROOT, env.DATA_DIR || 'data'), '/tmp/ssp-data');
 // Uploaded images/videos live in the project's assets folder (public/assets/uploads) so they can be committed and deployed with the site.
-const UPLOAD_DIR = IS_VERCEL ? '/tmp/ssp-uploads' : path.resolve(ROOT, env.UPLOAD_DIR || 'public/assets/uploads');
+const UPLOAD_DIR = IS_VERCEL ? ensureWritableDir('/tmp/ssp-uploads', '/tmp/ssp-uploads') : ensureWritableDir(path.resolve(ROOT, env.UPLOAD_DIR || 'public/assets/uploads'), '/tmp/ssp-uploads');
 const mk = (d) => { try { fs.mkdirSync(d, { recursive: true }); fs.accessSync(d, fs.constants.W_OK); return true; } catch { return false; } };
 mk(DATA_DIR);
 // false on read-only hosts: the admin then offers Google Drive upload / paste-a-link instead of local upload.

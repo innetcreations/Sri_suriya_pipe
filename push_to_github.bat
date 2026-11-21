@@ -12,20 +12,17 @@ git status -s
 echo.
 
 echo Pushing commits to branch 'main'...
-git push -u origin main
+git push origin main
 
 echo.
 if %ERRORLEVEL% EQU 0 (
     echo ===================================================
     echo   SUCCESS! Pushed to GitHub successfully.
     echo ===================================================
+    timeout /t 3 /nobreak >nul
 ) else (
     echo ===================================================
-    echo   PUSH FAILED or cancelled.
-    echo   If prompted, please log in via browser window.
+    echo   PUSH FAILED.
     echo ===================================================
+    pause
 )
-
-echo.
-pause
-

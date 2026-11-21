@@ -11,13 +11,28 @@ const wantLibsql = cfg.DB_DRIVER === 'libsql' || (cfg.DB_DRIVER === 'auto' && !!
 if (cfg.DB_DRIVER === 'auto' && cfg.TURSO_URL && !cfg.TURSO_TOKEN) console.warn('[db] TURSO_DATABASE_URL is set but TURSO_AUTH_TOKEN is empty.');
 const isReplica = wantLibsql && !!cfg.TURSO_URL;
 let raw;
+const dbFile = path.join(cfg.DATA_DIR, 'app.db');
+const dbDir = path.dirname(dbFile);
+try { fs.mkdirSync(dbDir, { recursive: true }); } catch {}
+
 if (wantLibsql) {
   const Libsql = require('libsql');
   raw = isReplica
     ? new Libsql(path.join(cfg.DATA_DIR, 'replica.db'), { syncUrl: cfg.TURSO_URL, authToken: cfg.TURSO_TOKEN })
-    : new Libsql(path.join(cfg.DATA_DIR, 'app.db'));
+    : new Libsql(dbFile);
 } else {
-  raw = new (require('better-sqlite3'))(path.join(cfg.DATA_DIR, 'app.db'));
+  let targetFile = dbFile;
+  try {
+    raw = new (require('better-sqlite3'))(targetFile);
+  } catch (err) {
+    if (err && /directory does not exist|EROFS|readonly/i.test(err.message)) {
+      try { fs.mkdirSync('/tmp/ssp-data', { recursive: true }); } catch {}
+      targetFile = '/tmp/ssp-data/app.db';
+      raw = new (require('better-sqlite3'))(targetFile);
+    } else {
+      throw err;
+    }
+  }
 }
 
 // ---- cloud replica helpers (no-ops for a plain local database)
