@@ -7,7 +7,7 @@
       "includeFiles": "{public/**,src/**,node_modules/libsql/**,node_modules/@libsql/**,node_modules/better-sqlite3/prebuilds/**,node_modules/better-sqlite3/build/Release/*.node}"
     }
   },
-  "rewrites": [{ "source": "/((?!api).*)", "destination": "/api" }],
+  "rewrites": [{ "source": "/:path*", "destination": "/api/index.js" }],
   "headers": [
     { "source": "/(css|js)/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, stale-while-revalidate=86400" }] },
     { "source": "/(fonts|vendor)/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
