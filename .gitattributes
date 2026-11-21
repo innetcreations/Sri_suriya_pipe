@@ -1,0 +1,13 @@
+# Keep Windows batch files in Windows (CRLF) line endings so cmd.exe reads them correctly.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+# Everything else: normal
+* text=auto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.woff2 binary
+*.mp4 binary
+*.webm binary
+*.glb binary

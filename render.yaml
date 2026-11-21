@@ -1,0 +1,33 @@
+# Render Blueprint – New → Blueprint → select this repository.
+# A persistent disk needs a paid instance type (the database and uploads live on it).
+services:
+  - type: web
+    name: sri-suriya-polymers
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    disk:
+      name: suriya-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DATA_DIR
+        value: /var/data/db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: APP_SECRET
+        generateValue: true
+      - key: SITE_URL            # set to your real address, e.g. https://www.yourdomain.com
+        sync: false
+      - key: ALLOWED_HOSTS       # your domain(s), comma separated
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD      # at least 12 characters
+        sync: false

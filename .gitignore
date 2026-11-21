@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+data/
+_backups/
+suriya-last-run.log
+suriya.new.bat
+*.log
+.DS_Store
+# Pictures uploaded in Admin -> Media live in public/assets/uploads. They are NOT ignored on purpose:
+# commit them so Vercel / GitHub deployments contain them.
+public/uploads/*
+!public/uploads/.gitkeep
+.vercel

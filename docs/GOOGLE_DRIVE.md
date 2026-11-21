@@ -1,0 +1,38 @@
+# Google Drive for pictures and videos
+
+There are **two ways** to use Google Drive with the website. Use either, or both.
+
+| | Way A – paste a link | Way B – upload from the admin |
+|---|---|---|
+| Setup | none | 5 minutes, once |
+| How | Upload the file to Drive yourself → **Share → Anyone with the link → Viewer** → copy the link → paste it in **Admin → Media → “Add a link”** (or in any picture/video field) | **Admin → Media → Upload** → choose **Google Drive** as the place to save |
+| Needs | nothing | the small script below |
+
+The website converts any Drive share link by itself: pictures become direct image links, videos open in Google's player, PDFs open or download.
+
+> **Important:** a link to a *folder* (`drive.google.com/drive/folders/...`) cannot be shown on a web page. Open the file itself and copy *its* share link.
+
+---
+
+## Way B – set up uploads to Drive (once)
+
+1. In Google Drive create a folder, e.g. **Sri Suriya Website Files**. Open it and copy the **folder id** – the long text at the end of the address bar after `/folders/`.
+2. Go to **script.google.com → New project**. Delete the sample code and paste everything from **`docs/drive/Code.gs`**. Name the project *Sri Suriya Drive*.
+3. **Project settings (gear icon) → Script properties → Add script property**
+   * `FOLDER_ID` = the folder id from step 1
+   * `ADMIN_KEY` = a long secret you invent (30+ random letters and numbers). Keep it private.
+4. **Deploy → New deployment → type: Web app**
+   * Execute as: **Me**
+   * Who has access: **Anyone**
+   * Press **Deploy**, allow the permissions Google asks for, and copy the **Web app URL** (it ends with `/exec`).
+5. In the website: **Admin → Settings → Media & Storage** → paste the **Web app URL** and the **ADMIN_KEY** → Save.
+   (On Vercel you can instead set the environment variables `DRIVE_SCRIPT_URL` and `DRIVE_ADMIN_KEY`.)
+6. **Admin → Media → Upload**, choose *Google Drive* – done. The picture is saved in your Drive folder and the website uses its public link.
+
+### Good to know
+* Files are visible to **anyone who has the link** (that is how a public website can show them). Do not upload private documents.
+* The script can only **create** files in that one folder. It cannot read, list or delete anything.
+* Limit: 30 MB per file through this route. Bigger videos: upload to Drive by hand (Way A).
+* If you change the script later: **Deploy → Manage deployments → Edit → New version**.
+* To switch uploads off: delete the two values in Settings, or delete the deployment in Apps Script.
+* Never share the ADMIN_KEY. If it leaks, change it in Script properties **and** in the website settings.

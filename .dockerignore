@@ -1,0 +1,8 @@
+node_modules
+data
+.env
+*.log
+tests
+.git
+public/uploads/*
+!public/uploads/.gitkeep

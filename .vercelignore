@@ -1,0 +1,11 @@
+tests
+scripts
+docs
+_backups
+data
+.env
+*.bat
+*.log
+ANTIGRAVITY_PROMPTS.md
+Dockerfile
+render.yaml
