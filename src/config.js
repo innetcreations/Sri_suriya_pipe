@@ -2,6 +2,8 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const dns = require('dns');
+if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
 
 const ROOT = path.resolve(__dirname, '..');
 
