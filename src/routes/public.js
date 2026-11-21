@@ -37,6 +37,7 @@ function serve(pageName, { status = 200 } = {}) {
 
 // ───────────────────────── pages
 router.get('/', serve('home'));
+router.get('/home', serve('home'));
 router.get('/products', serve('products'));
 router.get('/products/category/:slug', serve('category'));
 router.get('/products/:slug', serve('product'));
