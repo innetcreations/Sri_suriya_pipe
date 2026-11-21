@@ -14,6 +14,7 @@ const ROOT = path.resolve(__dirname, '..');
   for (const line of fs.readFileSync(f, 'utf8').split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/i);
     if (!m || m[1] in process.env) continue;
+    if (process.env.RATE_LIMIT_MULTIPLIER && (m[1].startsWith('SUPABASE_') || m[1] === 'ADMIN_EMAIL' || m[1] === 'ADMIN_PASSWORD' || m[1] === 'DRIVE_SCRIPT_URL' || m[1] === 'DRIVE_ADMIN_KEY')) continue;
     let v = m[2];
     if (/^(['"]).*\1$/.test(v)) v = v.slice(1, -1);
     process.env[m[1]] = v;
