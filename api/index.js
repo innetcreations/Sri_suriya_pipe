@@ -24,6 +24,16 @@ function boot() {
 
 module.exports = async (req, res) => {
   try {
+    if (req.url === '/debug-req' || req.url === '/api/debug-req' || req.headers['x-forwarded-uri'] === '/debug-req') {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      return res.end(JSON.stringify({
+        url: req.url,
+        method: req.method,
+        headers: req.headers
+      }, null, 2));
+    }
+
     if (!app) await boot();
 
     // Vercel rewrites all routes to /api; restore original route so Express matches correctly
