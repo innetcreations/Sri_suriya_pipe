@@ -23,12 +23,7 @@ function boot() {
 }
 
 module.exports = async (req, res) => {
-  res.setHeader('X-Hit-Index', 'yes');
-  res.setHeader('X-Req-Url', req.url || 'none');
   try {
-    if (req.url === '/' || req.url === '') {
-      res.setHeader('X-Hit-Root', 'true');
-    }
     if (!app) await boot();
 
     // Vercel rewrites: if req.url matches internal handler path, restore original URL for Express routing

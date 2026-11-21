@@ -134,4 +134,10 @@ process.on('unhandledRejection', (e) => console.error('[unhandledRejection]', e)
 process.on('uncaughtException', (e) => { console.error('[uncaughtException]', e); setTimeout(() => process.exit(1), 100); });
 
 if (require.main === module) main().catch((e) => { console.error('[fatal]', e); process.exit(1); });
-module.exports = { buildApp, init, main, settings };
+
+const handler = (req, res) => {
+  return require('./api/index')(req, res);
+};
+Object.assign(handler, { buildApp, init, main, settings });
+
+module.exports = handler;
