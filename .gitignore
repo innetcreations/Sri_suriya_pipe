@@ -12,3 +12,6 @@ suriya.new.bat
 public/uploads/*
 !public/uploads/.gitkeep
 .vercel
+
+# Local Netlify folder
+.netlify
